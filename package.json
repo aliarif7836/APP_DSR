@@ -1,0 +1,23 @@
+{
+  "name": "appinventiv-dashboard-automation",
+  "version": "1.0.0",
+  "description": "BDD automation for Appinventiv HR Dashboard using Cucumber + Playwright + TypeScript",
+  "scripts": {
+    "test": "cucumber-js",
+    "test:headed": "cross-env HEADLESS=false cucumber-js",
+    "test:login": "cucumber-js --tags @login",
+    "test:dsr": "cucumber-js --tags @dsr",
+    "dsr:today": "cucumber-js --tags @dsr_today",
+    "dry": "cucumber-js --dry-run",
+    "report": "echo Open reports/cucumber-report.html in a browser"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^11.3.0",
+    "@playwright/test": "^1.55.0",
+    "@types/node": "^22.10.0",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.4.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  }
+}

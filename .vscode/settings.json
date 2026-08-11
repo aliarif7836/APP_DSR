@@ -1,0 +1,34 @@
+{
+  // ── Ctrl/Cmd+Click navigation from .feature steps to their definitions ──
+  //
+  // Two Cucumber extensions are in common use and they read DIFFERENT keys,
+  // so both are configured here. Whichever one you have installed will work;
+  // the unused block is simply ignored.
+
+  // 1. "Cucumber (Gherkin) Full Support" — alexkrechik.cucumberautocomplete
+  //    Globs are relative to the WORKSPACE ROOT.
+  "cucumberautocomplete.steps": [
+    "src/steps/*.ts",
+    "src/steps/**/*.ts"
+  ],
+  "cucumberautocomplete.syncfeatures": "src/features/**/*.feature",
+  "cucumberautocomplete.strictGherkinCompletion": false,
+  "cucumberautocomplete.smartSnippets": true,
+  "cucumberautocomplete.stepsInvariants": true,
+  "cucumberautocomplete.onTypeFormat": true,
+  "cucumberautocomplete.customParameters": [],
+
+  // 2. "Cucumber" (official) — CucumberOpen.cucumber-official
+  "cucumber.features": [
+    "src/features/**/*.feature"
+  ],
+  "cucumber.glue": [
+    "src/steps/**/*.ts"
+  ],
+
+  // Ensure .feature files are treated as Gherkin — without this the
+  // extension never activates and Cmd+Click does nothing at all.
+  "files.associations": {
+    "*.feature": "feature"
+  }
+}
