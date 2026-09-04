@@ -20,4 +20,4 @@ Feature: DSR - Daily Status Report
     And User clicks on My DSR
     And User clicks on the Add button
     And User fills today's DSR form
-    #And User submits the DSR form
+    And User submits the DSR form

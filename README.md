@@ -81,3 +81,59 @@ real id/class. Then keep adding new scripts the same way:
 2. Add steps in `src/steps/xyz.steps.ts` (use `this` typed as `CustomWorld`).
 3. Register the page object on `CustomWorld` if you cache it on `this`.
 4. Write `src/features/xyz.feature`.
+
+---
+
+## Automated daily runs (GitHub Actions)
+
+`.github/workflows/daily-dsr.yml` files the DSR without anyone opening a
+terminal.
+
+**Schedule:** `30 13 * * 1-5` — Mon–Fri at **13:30 UTC = 19:00 IST**.
+GitHub cron is always UTC and does not follow DST or Indian holidays.
+
+**Manual run:** Actions → *Daily DSR* → *Run workflow*. Optional inputs:
+
+| Input | Effect |
+|---|---|
+| `description` | Today's DSR text. Overrides `dsr-description.txt`. |
+| `estimated_hours` | Overrides `DSR_ESTIMATED_HOURS`. |
+| `dry_run` | Opens the form but does **not** submit (runs `@TC_DASH_DSR_1`). |
+
+### Required repository secrets
+
+Settings → Secrets and variables → Actions → *Secrets*:
+
+| Secret | Value |
+|---|---|
+| `ADMIN_EMAIL` | Your official Appinventiv email |
+| `ADMIN_PASSWORD` | Your dashboard password |
+
+There are **no fallback credentials in the code**. A run without these
+secrets fails at the verification step with a clear message.
+
+### Optional repository variables
+
+Settings → Secrets and variables → Actions → *Variables*. All have defaults:
+
+| Variable | Default |
+|---|---|
+| `BASE_URL` | `https://dashboard.appinventiv.com` |
+| `DSR_PROJECT` | `Whataburger` |
+| `DSR_ESTIMATED_HOURS` | `8:30` |
+| `DSR_USED_AI_TOOLS` | `yes` |
+
+### Where the description comes from
+
+1. `DSR_DESCRIPTION` env var — set by a manual run's `description` input.
+2. `dsr-description.txt` — the committed file, used by scheduled runs.
+
+A scheduled run has no one to type the text, so **it submits whatever is
+committed in `dsr-description.txt`**. Keep that file current, or trigger the
+workflow manually with the `description` input each day.
+
+### Results
+
+Every run uploads a `dsr-run-<number>` artifact containing
+`reports/cucumber-report.html` and the end-of-scenario screenshots.
+Retained for 14 days.

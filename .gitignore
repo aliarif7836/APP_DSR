@@ -4,3 +4,4 @@ reports/
 screenshots/
 .env
 .DS_Store
+compare-env/

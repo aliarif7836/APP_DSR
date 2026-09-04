@@ -1,0 +1,103 @@
+name: Daily DSR
+
+# Files today's DSR automatically.
+#
+# GitHub cron is ALWAYS UTC. 13:30 UTC = 19:00 IST.
+# Mon-Fri only. If your office observes a holiday, cancel the run from the
+# Actions tab or the DSR gets filed anyway.
+on:
+  schedule:
+    - cron: '30 13 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      description:
+        description: "Today's DSR text (leave blank to use dsr-description.txt)"
+        required: false
+        type: string
+      estimated_hours:
+        description: 'Estimated hours (HH:MM)'
+        required: false
+        default: '8:30'
+        type: string
+      dry_run:
+        description: 'Fill the form but do NOT submit'
+        required: false
+        default: false
+        type: boolean
+
+# Never let two runs file two DSRs at once.
+concurrency:
+  group: daily-dsr
+  cancel-in-progress: false
+
+jobs:
+  file-dsr:
+    name: File DSR
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      BASE_URL: ${{ vars.BASE_URL || 'https://dashboard.appinventiv.com' }}
+      ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+      DSR_PROJECT: ${{ vars.DSR_PROJECT || 'Whataburger' }}
+      DSR_ESTIMATED_HOURS: ${{ inputs.estimated_hours || vars.DSR_ESTIMATED_HOURS || '8:30' }}
+      DSR_USED_AI_TOOLS: ${{ vars.DSR_USED_AI_TOOLS || 'yes' }}
+      DSR_DESCRIPTION: ${{ inputs.description }}
+      BROWSER: chromium
+      HEADLESS: 'true'
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Verify required secrets are present
+        run: |
+          missing=0
+          for var in ADMIN_EMAIL ADMIN_PASSWORD; do
+            if [ -z "${!var}" ]; then
+              echo "::error::Missing repository secret: $var"
+              missing=1
+            fi
+          done
+          [ "$missing" -eq 0 ]
+
+      - name: Run DSR scenario
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            npx cucumber-js --tags '@TC_DASH_DSR_1'
+          else
+            npx cucumber-js --tags '@dsr_today'
+          fi
+
+      - name: Upload report and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dsr-run-${{ github.run_number }}
+          path: |
+            reports/
+            screenshots/
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Summarise outcome
+        if: always()
+        run: |
+          echo "### Daily DSR — ${{ job.status }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Date (UTC): $(date -u '+%Y-%m-%d %H:%M')" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Download the **dsr-run-${{ github.run_number }}** artifact for the HTML report and end-of-scenario screenshots." >> "$GITHUB_STEP_SUMMARY"
